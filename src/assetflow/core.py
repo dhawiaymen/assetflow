@@ -15,6 +15,15 @@ from PIL import Image, ImageOps
 SUPPORTED = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tga"}
 
 
+class PipelineCancelled(ValueError):
+    """Cancelled before publication; the staging directory is discarded."""
+
+
+def check_cancel(cancel):
+    if cancel is not None and cancel.is_set():
+        raise PipelineCancelled("Cancelled. No output was published; originals are unchanged.")
+
+
 @dataclass(frozen=True)
 class Options:
     format: str = "png"
@@ -49,20 +58,24 @@ def discover(source):
     if not root.is_dir():
         raise ValueError("Input must be an existing folder")
     found = []
-    for path in sorted(root.rglob("*")):
+    for directory, dirs, files in os.walk(root, followlinks=False):
+        dirs[:] = sorted(d for d in dirs if not (Path(directory) / d).is_symlink())
+        for filename in sorted(files):
+            path = Path(directory) / filename
         # Do not follow symlinked files or read outside the requested tree.
-        if (
-            path.is_file()
-            and path.suffix.lower() in SUPPORTED
-            and not path.is_symlink()
-            and path.resolve().is_relative_to(root)
-        ):
-            found.append(path)
+            if (
+                path.suffix.lower() in SUPPORTED
+                and not path.is_symlink()
+                and path.resolve().is_relative_to(root)
+            ):
+                found.append(path)
+                if len(found) > 10000:
+                    raise ValueError("Split this input into batches of at most 10,000 images")
     if not found:
         raise ValueError("No supported images found")
     if len(found) > 10000:
         raise ValueError("Split this input into batches of at most 10,000 images")
-    return root, found
+    return root, sorted(found)
 
 
 def prepare(path, options):
@@ -134,7 +147,7 @@ def staging_dir(out):
     return Path(tempfile.mkdtemp(prefix=".assetflow-", dir=out.parent))
 
 
-def optimize(source, output, options=None, dry_run=False, progress=None):
+def optimize(source, output, options=None, dry_run=False, progress=None, cancel=None):
     options = (options or Options()).validate()
     root, paths = discover(source)
     out = destination(root, output)
@@ -153,13 +166,17 @@ def optimize(source, output, options=None, dry_run=False, progress=None):
     seen = {}
     try:
         for i, path in enumerate(paths):
+            check_cancel(cancel)
             name = path.relative_to(root).as_posix()
             if progress:
                 progress(i + 1, len(paths), name)
             try:
                 img, meta = prepare(path, options)
                 data = encode(img, options)
-                digest = hashlib.sha256(str(img.size).encode() + img.tobytes()).hexdigest()
+                pixel_hash = hashlib.sha256(str(img.size).encode())
+                pixel_hash.update(img.tobytes())
+                digest = pixel_hash.hexdigest()
+                img.close()
                 if digest in seen:
                     report["duplicates"].append({"file": name, "same_pixels_as": seen[digest]})
                 else:
@@ -192,6 +209,7 @@ def optimize(source, output, options=None, dry_run=False, progress=None):
             ) as exc:
                 report["errors"].append({"source": name, "error": str(exc)})
         report["saved_bytes"] = report["input_bytes"] - report["output_bytes"]
+        check_cancel(cancel)
         if stage:
             (stage / "manifest.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
             os.rename(stage, out)
@@ -221,7 +239,7 @@ def pack_rectangles(rectangles, size):
     return positions
 
 
-def build_atlas(source, output, options=None, progress=None):
+def build_atlas(source, output, options=None, progress=None, cancel=None):
     options = (options or Options(trim=True)).validate()
     root, paths = discover(source)
     out = destination(root, output)
@@ -231,6 +249,7 @@ def build_atlas(source, output, options=None, progress=None):
     pixels = 0
     # Validate and pack before allocating the output or writing anything.
     for i, path in enumerate(paths):
+        check_cancel(cancel)
         name = path.relative_to(root).as_posix()
         if progress:
             progress(i + 1, len(paths), name)
@@ -238,8 +257,9 @@ def build_atlas(source, output, options=None, progress=None):
         pixels += img.width * img.height
         if pixels > 64_000_000:
             raise ValueError("Atlas input exceeds the 64 million pixel memory budget")
-        sprites.append((name, img, meta))
+        sprites.append((name, path, meta, img.size))
         rectangles.append((name, img.width + 2 * margin, img.height + 2 * margin))
+        img.close()
     positions = pack_rectangles(rectangles, options.atlas_size)
     used_w = max(positions[n][0] + w for n, w, h in rectangles)
     used_h = max(positions[n][1] + h for n, w, h in rectangles)
@@ -250,7 +270,11 @@ def build_atlas(source, output, options=None, progress=None):
 
     atlas = Image.new("RGBA", (pot(used_w), pot(used_h)))
     frames = {}
-    for name, img, meta in sprites:
+    for name, path, meta, expected_size in sprites:
+        check_cancel(cancel)
+        img, current_meta = prepare(path, options)
+        if img.size != expected_size or current_meta != meta:
+            raise ValueError(f"Input changed during packing: {name}. Retry with stable inputs.")
         px, py = positions[name]
         x = px + margin
         y = py + margin
@@ -281,6 +305,7 @@ def build_atlas(source, output, options=None, progress=None):
             "rotated": False,
             **meta,
         }
+        img.close()
     manifest = {
         "frames": frames,
         "meta": {
@@ -296,8 +321,10 @@ def build_atlas(source, output, options=None, progress=None):
     }
     stage = staging_dir(out)
     try:
+        check_cancel(cancel)
         atlas.save(stage / "atlas.png", optimize=True)
         (stage / "atlas.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        check_cancel(cancel)
         os.rename(stage, out)
     except BaseException:
         shutil.rmtree(stage, ignore_errors=True)

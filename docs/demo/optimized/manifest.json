@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "operation": "optimize",
+  "options": {
+    "format": "webp",
+    "max_size": 2048,
+    "trim": true,
+    "quality": 85,
+    "lossless": true,
+    "padding": 2,
+    "atlas_size": 2048,
+    "extrude": 1
+  },
+  "files": [
+    {
+      "source": "mint.png",
+      "output": "mint.png.webp",
+      "input_bytes": 463,
+      "output_bytes": 164,
+      "sha256": "0f95ecdb409d19dfef48f64c9b575ef476c51bbfe27826a0bb20ac9064cf23f8",
+      "originalSize": [
+        96,
+        96
+      ],
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+      },
+      "trimmed": true
+    },
+    {
+      "source": "ruby.png",
+      "output": "ruby.png.webp",
+      "input_bytes": 461,
+      "output_bytes": 162,
+      "sha256": "84e512a16cacaa108209ce7ceb2ac249f318cc8b541037017443eb00e381c5d8",
+      "originalSize": [
+        96,
+        96
+      ],
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+      },
+      "trimmed": true
+    },
+    {
+      "source": "sky.png",
+      "output": "sky.png.webp",
+      "input_bytes": 463,
+      "output_bytes": 162,
+      "sha256": "45d371ee6b6f5c86681d07ca381d1bf1b1b393cbc5456c810542e9f59d3b3c89",
+      "originalSize": [
+        96,
+        96
+      ],
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+      },
+      "trimmed": true
+    }
+  ],
+  "errors": [],
+  "input_bytes": 1387,
+  "output_bytes": 488,
+  "duplicates": [],
+  "dry_run": false,
+  "saved_bytes": 899
+}

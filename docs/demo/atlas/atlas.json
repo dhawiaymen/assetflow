@@ -1,0 +1,89 @@
+{
+  "frames": {
+    "mint.png": {
+      "frame": {
+        "x": 3,
+        "y": 3,
+        "w": 64,
+        "h": 64
+      },
+      "rotated": false,
+      "originalSize": [
+        96,
+        96
+      ],
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+      },
+      "trimmed": true
+    },
+    "ruby.png": {
+      "frame": {
+        "x": 73,
+        "y": 3,
+        "w": 64,
+        "h": 64
+      },
+      "rotated": false,
+      "originalSize": [
+        96,
+        96
+      ],
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+      },
+      "trimmed": true
+    },
+    "sky.png": {
+      "frame": {
+        "x": 143,
+        "y": 3,
+        "w": 64,
+        "h": 64
+      },
+      "rotated": false,
+      "originalSize": [
+        96,
+        96
+      ],
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+      },
+      "trimmed": true
+    }
+  },
+  "meta": {
+    "app": "AssetFlow",
+    "version": "0.1.0",
+    "image": "atlas.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 256,
+      "h": 128
+    },
+    "scale": "1",
+    "padding": 2,
+    "extrude": 1
+  }
+}

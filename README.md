@@ -1,13 +1,29 @@
 # AssetFlow
 
+[![Tests and Windows build](https://github.com/dhawiaymen/assetflow/actions/workflows/ci.yml/badge.svg)](https://github.com/dhawiaymen/assetflow/actions/workflows/ci.yml)
+
+![AssetFlow application screenshot](docs/demo/application.png)
+
+
 **A non-destructive image pipeline for small game teams.**
 
 AssetFlow is a Windows-oriented desktop and CLI tool for preparing raster
 game assets: resize, trim transparent margins, convert, inspect duplicates,
 and pack sprites into a texture atlas with JSON coordinates.
 
-Version **0.1.0**, initial release candidate. Python + Pillow. MIT licensed.
+Version **0.1.0**, initial public version. Python + Pillow. MIT licensed.
 No account, cloud processing, analytics, or AI service is required.
+
+## Portable Windows download
+
+Open [Releases](https://github.com/dhawiaymen/assetflow/releases) and download the
+`assetflow-0.1.0-windows-x64.zip` asset when the verified release is available.
+Extract **the whole archive**, then launch `AssetFlow/AssetFlow.exe`. Do not run it inside
+the ZIP or move only the EXE. The application is unsigned. No administrator
+rights or paid account is needed. Keep the bundled `licenses/` folder.
+
+See [Windows help](docs/WINDOWS.md), [troubleshooting](docs/TROUBLESHOOTING.md),
+[real demonstrations](docs/DEMO.md), and the [public roadmap](ROADMAP.md).
 
 ## Features
 
@@ -22,6 +38,9 @@ No account, cloud processing, analytics, or AI service is required.
   extrusion, power-of-two sizing where the limit permits, and no rotation.
 - Dry-run optimization computes actual encoded sizes without writing output.
 - GUI work runs in a background thread while progress remains visible.
+- Preview the original and actual encoded result before writing files; cancel between images.
+
+![Before and after preview](docs/demo/preview.png)
 
 ## Windows quick start
 
@@ -81,8 +100,7 @@ powershell -ExecutionPolicy Bypass -File scripts/build_windows.ps1
 Tests compare pixels and alpha channels, reconstruct atlas frames, check
 non-overlap, verify read-only behavior, and exercise corrupt and animated
 inputs. GitHub Actions is configured for Windows/Ubuntu and Python 3.11–3.13.
-No Windows executable or successful hosted CI run is implied by these files.
-See the supplied validation record and [`docs/WINDOWS.md`](docs/WINDOWS.md).
+See [executed validation](docs/VALIDATION.md) and [Windows distribution](docs/WINDOWS.md).
 
 ## Limitations and resource bounds
 
@@ -104,3 +122,10 @@ Atlas creation is all-or-nothing; optimization reports individual failures.
 See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
 [LICENSE](LICENSE). Maintainer: [dhawiaymen](https://github.com/dhawiaymen).
 The initial implementation was AI-assisted. No adoption metrics are claimed.
+
+## Community
+
+Report reproducible bugs through [Issues](https://github.com/dhawiaymen/assetflow/issues),
+read the [contribution guide](CONTRIBUTING.md), and discuss proposals in
+[Discussions](https://github.com/dhawiaymen/assetflow/discussions) when enabled.
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md).
