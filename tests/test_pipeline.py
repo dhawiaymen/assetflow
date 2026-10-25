@@ -150,43 +150,25 @@ def test_animated_input_rejected(images, tmp_path):
 
 
 @pytest.mark.gui
-def test_gui_constructs():
-    import tkinter as tk
+def test_gui_constructs(tk_root):
     from assetflow.gui import AssetApp
-
-    try:
-        root = tk.Tk()
-    except tk.TclError:
-        pytest.skip("No graphical display available")
-    try:
-        app = AssetApp(root)
-        root.update()
-        assert app.mode.get() == "optimize"
-    finally:
-        root.destroy()
+    app = AssetApp(tk_root)
+    tk_root.update()
+    assert app.mode.get() == "optimize"
 
 
 @pytest.mark.gui
-def test_gui_runs_pipeline_in_worker(images, tmp_path):
+def test_gui_runs_pipeline_in_worker(images, tmp_path, tk_root):
     import time
-    import tkinter as tk
     from assetflow.gui import AssetApp
-
-    try:
-        root = tk.Tk()
-    except tk.TclError:
-        pytest.skip("No graphical display available")
-    try:
-        app = AssetApp(root)
-        app.input.set(str(images))
-        app.output.set(str(tmp_path / "gui output"))
-        app.run()
-        deadline = time.monotonic() + 10
-        while app.busy and time.monotonic() < deadline:
-            root.update()
-            time.sleep(0.02)
-        assert not app.busy
-        assert (tmp_path / "gui output/manifest.json").exists()
-        assert "ERROR:" not in app.log.get("1.0", "end")
-    finally:
-        root.destroy()
+    app = AssetApp(tk_root)
+    app.input.set(str(images))
+    app.output.set(str(tmp_path / "gui output"))
+    app.run()
+    deadline = time.monotonic() + 10
+    while app.busy and time.monotonic() < deadline:
+        tk_root.update()
+        time.sleep(0.02)
+    assert not app.busy
+    assert (tmp_path / "gui output/manifest.json").exists()
+    assert "ERROR:" not in app.log.get("1.0", "end")
