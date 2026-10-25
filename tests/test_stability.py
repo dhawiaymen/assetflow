@@ -1,7 +1,25 @@
 import threading
+import weakref
 import pytest
 from PIL import Image
 from assetflow.core import optimize, build_atlas, PipelineCancelled, discover
+
+
+@pytest.mark.gui
+def test_destroy_releases_tk_variables_on_ui_thread():
+    import tkinter as tk
+    from assetflow.gui import AssetApp
+    try:
+        root = tk.Tk()
+    except tk.TclError:
+        pytest.skip("No display")
+    app = AssetApp(root)
+    variables = [weakref.ref(value) for value in vars(app).values() if isinstance(value, tk.Variable)]
+    assert variables
+    root.destroy()
+    # No GC timing assumption: the destroyed app can stay referenced by tests
+    # or callbacks without retaining Tk variables for a worker to finalize.
+    assert all(reference() is None for reference in variables)
 
 
 @pytest.mark.parametrize("operation", [optimize, build_atlas])

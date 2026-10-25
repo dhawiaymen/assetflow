@@ -103,6 +103,12 @@ class AssetApp(ttk.Frame):
 
     def destroy(self):
         self.after_cancel(self._poll_id)
+        # Tk variables must be finalized on the UI thread. A later image worker
+        # can otherwise trigger cyclic GC for an already-destroyed workbench.
+        for name, value in list(vars(self).items()):
+            if isinstance(value, tk.Variable):
+                setattr(self, name, None)
+        del value
         super().destroy()
 
     def input_folder(self):
