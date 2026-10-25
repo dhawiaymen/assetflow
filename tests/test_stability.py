@@ -6,19 +6,13 @@ from assetflow.core import optimize, build_atlas, PipelineCancelled, discover
 
 
 @pytest.mark.gui
-def test_destroy_releases_tk_variables_on_ui_thread():
+def test_destroy_releases_tk_variables_on_ui_thread(tk_root):
     import tkinter as tk
     from assetflow.gui import AssetApp
-    try:
-        root = tk.Tk()
-    except tk.TclError:
-        pytest.skip("No display")
-    app = AssetApp(root)
+    app = AssetApp(tk_root)
     variables = [weakref.ref(value) for value in vars(app).values() if isinstance(value, tk.Variable)]
     assert variables
-    root.destroy()
-    # No GC timing assumption: the destroyed app can stay referenced by tests
-    # or callbacks without retaining Tk variables for a worker to finalize.
+    app.destroy()
     assert all(reference() is None for reference in variables)
 
 
@@ -56,31 +50,24 @@ def test_symlink_directory_is_not_traversed(tmp_path):
 
 
 @pytest.mark.gui
-def test_before_after_preview_is_real_and_read_only(tmp_path, monkeypatch):
+def test_before_after_preview_is_real_and_read_only(tmp_path, monkeypatch, tk_root):
     import time
     import tkinter as tk
     from assetflow.gui import AssetApp
     source = tmp_path / "image.png"
     Image.new("RGBA", (80, 60), (255, 0, 0, 100)).save(source)
     original = source.read_bytes()
-    try:
-        root = tk.Tk()
-    except tk.TclError:
-        pytest.skip("No display")
-    try:
-        app = AssetApp(root)
-        app.size.set("40")
-        monkeypatch.setattr("assetflow.gui.filedialog.askopenfilename", lambda **kw: str(source))
-        app.preview()
-        deadline = time.monotonic() + 10
-        while app.busy and time.monotonic() < deadline:
-            root.update()
-            time.sleep(.01)
-        assert not app.busy
-        windows = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
-        assert len(windows) == 1
-        assert len(windows[0].preview_images) == 2
-        assert source.read_bytes() == original
-        assert list(tmp_path.iterdir()) == [source]
-    finally:
-        root.destroy()
+    app = AssetApp(tk_root)
+    app.size.set("40")
+    monkeypatch.setattr("assetflow.gui.filedialog.askopenfilename", lambda **kw: str(source))
+    app.preview()
+    deadline = time.monotonic() + 10
+    while app.busy and time.monotonic() < deadline:
+        tk_root.update()
+        time.sleep(.01)
+    assert not app.busy
+    windows = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
+    assert len(windows) == 1
+    assert len(windows[0].preview_images) == 2
+    assert source.read_bytes() == original
+    assert list(tmp_path.iterdir()) == [source]

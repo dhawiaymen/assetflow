@@ -34,3 +34,5 @@ remains outstanding.
 [Authentic demo](DEMO.md) · [Reproducible benchmark](demo/benchmark.json)
 
 A parallel Windows/Python 3.13 run exposed delayed Tk-variable finalization in an image worker after an earlier workbench was destroyed. The initial release run was cancelled; a regression now checks that destruction releases all owned Tk variables immediately on the UI thread.
+
+The GUI test fixture also explicitly collects destroyed interpreter cycles on the main thread between tests. A missing display is a failure in CI, rather than a skipped GUI check. The production workbench uses one interpreter for its lifetime.
